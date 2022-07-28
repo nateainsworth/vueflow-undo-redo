@@ -36,13 +36,3 @@ const onRestore = () => {
     setTransform({ x, y, zoom: flow.zoom || 0 })
   }
 }
-
-const onAdd = () => {
-  const id = nodes.value.length + 1
-  const newNode = {
-    id: `random_node-${id}`,
-    label: `Node ${id}`,
-    position: { x: Math.random() * dimensions.value.width, y: Math.random() * dimensions.value.height },
-  }
-  addNodes([newNode])
-}
