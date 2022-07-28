@@ -37,6 +37,8 @@ let history = [];
 let refinedHistory = [];
 let historyPosition = 0;
 let dragActive = false;
+// top defines the top of the history, if the user uses undo a few times and then performs some changes the top will prevent the redo from jumping back until it has been overwritten with a new value. 
+let top = 0;
 
 
 const updateStore = () => {
@@ -45,23 +47,25 @@ const updateStore = () => {
 const onUndo = () => {
   //const reloadFlow = reStore.undoChange();
   //store.elements = reloadFlow;
-  /*console.log("History Position: " + historyPosition);
-  history[historyPosition-1].forEach((element) => {
-    
-    console.log('With ID: ', element.id);
-    const result = previousStoreState.find(({ id }) => id === element.id);
-    console.log(result);  
-      
-  })*/
-
- 
 
   // get history position - 1 and loop the individual changes
   refinedHistory[historyPosition-1].changes.forEach((element) => {
     console.log(element)
     console.log('Undo: ' + element.undo.type)
-   
+    if(element.undo.type == "Delete"){
+      element.undo.e.type = "remove";
+      console.log("node to delete:")
+      console.log(element.undo.e)
 
+      let changes = []
+      changes = {
+        type: "remove"
+      }
+      //applyNodeChanges("remove", element.undo.e);
+      applyNodeChanges(changes, element.undo.e);
+    }
+    
+   
   });
   historyPosition--;
   
@@ -97,60 +101,63 @@ const onNodesChange = async (e: FlowEvents['nodesChange']) => {
       console.log('Node Changed: ', e)
       // add to history and increment history position
       history.push(e);
-      
-      historyPosition++;
-      console.log("History Position: " + historyPosition);
-      console.log('history: ' + history);
-
+    
       let changes = [];
 
+      // ignores add as add also sends a dimentions event and since it's not currently within the vueflow the result check for exisiting ID will return undefined.
+      if(e[0].type != "add"){
+    
+        e.forEach((element) => {
+          console.log('With ID: ', element.id);
+          let undoType = '';
+          let redoType = '';
 
-      e.forEach((element) => {
-        console.log('With ID: ', element.id);
-        let undoType = '';
-        let redoType = '';
+          // checks if element existed in the previous flow version
+          const result = previousStoreState.find(({ id }) => id === element.id);
+          
+          let resultNode = '';
 
-        // checks if element existed in the previous flow version
-        const result = previousStoreState.find(({ id }) => id === element.id);
-        
-        let resultNode = '';
+          // if no result found then we know that it's a new node
+          if(result === undefined){
+            undoType = 'Delete';
+            redoType = 'Add';
+            resultNode = element;
+          }else{
+            undoType =  element.type;
+            redoType =  element.type;
+            // change result from proxy to  object to give previous node settings
+            resultNode = JSON.parse(JSON.stringify(result));
+            console.log(resultNode);
+          }
 
-        // if no result found then we know that it's a new node
-        if(result === undefined){
-          undoType = 'Delete';
-          redoType = 'Add';
-          resultNode = element;
-        }else{
-          undoType =  element.type;
-          redoType =  element.type;
-          // change result from proxy to  object to give previous node settings
-          resultNode = JSON.parse(JSON.stringify(result));
-          console.log(resultNode);
-        }
-
-
-        changes.push({  
-          undo: {
-            type: undoType,
-            e: resultNode,
-          },
-          redo: {
-            type: redoType,
-            e: element,
-          },
-        });
+          changes.push({  
+            undo: {
+              type: undoType,
+              e: resultNode,
+            },
+            redo: {
+              type: redoType,
+              e: element,
+            },
+          });
 
 
-      })
-      refinedHistory.push({
-        changes:changes
-      })
+        })
+        refinedHistory.push({
+          changes:changes
+        })
 
+        // saves the state before the next change happens.
+        previousStoreState = store.elements;
+
+        //increments the history position
+        historyPosition++;
+        console.log("History Position: " + historyPosition);
+        console.log('history: ' + history);
+      }
       
 
-      // saves the state before the next change happens.
-      await nextTick();
-      previousStoreState = store.elements;
+
       
 
     }
