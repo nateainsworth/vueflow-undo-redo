@@ -21,18 +21,3 @@ export default class reStoreController {
     }
 };
 
-
-const onSave = () => {
-  localStorage.setItem(flowKey, JSON.stringify(toObject()))
-}
-
-const onRestore = () => {
-  const flow = JSON.parse(localStorage.getItem(flowKey))
-
-  if (flow) {
-    const [x = 0, y = 0] = flow.position
-    setNodes(flow.nodes)
-    setEdges(flow.edges)
-    setTransform({ x, y, zoom: flow.zoom || 0 })
-  }
-}
