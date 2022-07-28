@@ -6,43 +6,16 @@ import Controls from './Controls.vue'
 import reStore from './undoredo.js';
 
 
-
-
 const store = useStore();
-
-// old watch version
-
-//const reStore2 = reStore();
-/*
-let prevlength = 0;
-watch(() => store.elements.length, 
-  (currentValue) => {
-    if(prevlength != currentValue){
-      prevlength = currentValue;
-      console.log(currentValue);
-      reStore.logChange(JSON.stringify(store.elements));
-      //Controls.onSave();
-    }
-  },
-  {deep: true}
-);
-*/
 
 const { onConnect, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange } = useVueFlow();
 
-
-
-
-
 onConnect((params) => addEdges([params]));
-
-
 
 
 let previousE = [];
 let previousStoreState = store.elements;
 let history = [];
-let refinedHistory = [];
 let historyPosition = 0;
 let dragActive = false;
 // top defines the top of the history, if the user uses undo a few times and then performs some changes the top will prevent the redo from jumping back until it has been overwritten with a new value. 
@@ -58,10 +31,10 @@ const onUndo = () => {
   //store.elements = reloadFlow;
 
   // get history position - 1 and loop the individual changes
-  refinedHistory[historyPosition-1].changes.forEach((element) => {
+  history[historyPosition-1].changes.forEach((element) => {
     console.log(element)
     console.log('Undo: ' + element.undo.type)
-    if(element.undo.type == "Delete"){
+    if(element.undo.type == "remove"){
       element.undo.e.type = "remove";
       console.log("node to delete:")
       console.log(element.undo.e)
@@ -72,7 +45,7 @@ const onUndo = () => {
     }
    
   });
-  
+  previousStoreState = store.elements;
   historyPosition--;
   
 }
@@ -120,21 +93,13 @@ onNodesChange((e) => {
     let eAsString = JSON.stringify(e);
     if(eAsString != previousE){
       previousE = eAsString;
-
-      console.log('Node Changed: ', e)
-      // add to history and increment history position
-      history.push(e);
     
       let changes = [];
 
       // ignores add as add also sends a dimentions event and since it's not currently within the vueflow the result check for exisiting ID will return undefined.
       if(e[0].type != "add"){
     
-        console.log("before each: ")
-        console.log(e);
         e.forEach((element) => {
-          console.log("after each: ")
-          console.log(element);
           console.log('With ID: ', element.id);
           let undoType = '';
           let redoType = '';
@@ -146,15 +111,17 @@ onNodesChange((e) => {
 
           // if no result found then we know that it's a new node
           if(result === undefined){
-            undoType = 'Delete';
-            redoType = 'Add';
+            undoType = 'remove';
+            redoType = 'add';
             resultNode = element;
+            console.log('add node called: ' + element.id);
           }else{
             undoType =  element.type;
             redoType =  element.type;
             // change result from proxy to  object to give previous node settings
             resultNode = JSON.parse(JSON.stringify(result));
-            console.log(resultNode);
+            //console.log(resultNode);
+            console.log('update node called: ' + element.id);
           }
 
           // creates the redo and undo options for each element
@@ -171,9 +138,9 @@ onNodesChange((e) => {
             },
           });
 
-
+          console.log(changes[0].undo);
         })
-        refinedHistory.push({
+        history.push({
           changes:changes
         })
 
@@ -183,40 +150,16 @@ onNodesChange((e) => {
         //increments the history position
         historyPosition++;
         console.log("History Position: " + historyPosition);
-        console.log('history: ' + history);
+  
       }
-      
-
-
-      
 
     }
   }
-  //applyNodeChanges(e);
+
 });
 
 onEdgesChange((e) => {
-/*  if(!dragActive ){
-    // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
-    //if(e != previousE){
-      previousE = e;
-      console.log('Node Changed: ', e)
-      // add to history and increment history position
-      history.push(e);
-      historyPosition++;
-      console.log('history: ' + history);
 
-      e.forEach((element) => {
-        console.log('With ID: ', element.id);
-        
-        //previousStoreState.getNode(element.id)
-        
-      })
-
-      //previousStoreState.getNode(element.id)
-    //}
-  }
-  */
 });
 
 // undo save the original value
@@ -224,12 +167,6 @@ onEdgesChange((e) => {
 
 </script>
 
-<!--   @node-drag-stop="onNodeDragStop"
-  @node-drag-start="onNodeDragStart"
-  @edges-change="onEdgeChange"
-  @selection-drag-start="onSelectionDragStart"
-  @selection-drag-stop="onSelectionDragStop"
-  -->
 <template>
   <VueFlow 
   v-model="store.elements" 
