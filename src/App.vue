@@ -66,11 +66,8 @@ const onUndo = () => {
       console.log("node to delete:")
       console.log(element.undo.e)
 
-      let changes = [{
-        type: "remove"
-      }]
       //applyNodeChanges("remove", element.undo.e);
-      applyNodeChanges(changes, element.undo.e);
+      applyNodeChanges([element.undo.e]);
       
     }
    
@@ -133,7 +130,11 @@ onNodesChange((e) => {
       // ignores add as add also sends a dimentions event and since it's not currently within the vueflow the result check for exisiting ID will return undefined.
       if(e[0].type != "add"){
     
+        console.log("before each: ")
+        console.log(e);
         e.forEach((element) => {
+          console.log("after each: ")
+          console.log(element);
           console.log('With ID: ', element.id);
           let undoType = '';
           let redoType = '';
