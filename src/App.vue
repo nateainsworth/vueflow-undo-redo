@@ -126,7 +126,7 @@ onNodesChange((e) => {
           if(result === undefined){
             undoType = 'remove';
             redoType = 'add';
-            //resultNode = element;
+            resultNode = element;
             //console.log('add node called: ' + element.id);
           }else{
             undoType =  element.type;
