@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { VueFlow, useVueFlow,Elements, FlowEvents, VueFlowStore } from '@braks/vue-flow';
-import { computed, watch } from 'vue';
+import { computed, watch, nextTick } from 'vue';
 import useStore from './store.js';
 import Controls from './Controls.vue'
 import reStore from './undoredo.js';
+
 
 
 const store = useStore();
@@ -44,14 +45,25 @@ const updateStore = () => {
 const onUndo = () => {
   //const reloadFlow = reStore.undoChange();
   //store.elements = reloadFlow;
-  console.log("History Position: " + historyPosition);
+  /*console.log("History Position: " + historyPosition);
   history[historyPosition-1].forEach((element) => {
     
     console.log('With ID: ', element.id);
     const result = previousStoreState.find(({ id }) => id === element.id);
     console.log(result);  
       
-  })
+  })*/
+
+ 
+
+  // get history position - 1 and loop the individual changes
+  refinedHistory[historyPosition-1].changes.forEach((element) => {
+    console.log(element)
+    console.log('Undo: ' + element.undo.type)
+   
+
+  });
+  historyPosition--;
   
 }
 const onRedo = () => {
@@ -72,11 +84,16 @@ const onNodeDragStart = (e: FlowEvents['nodeDragStart']) => {
   dragActive = true;
 }
 
-const onNodesChange = (e: FlowEvents['nodesChange']) => {
+const onNodesChange = async (e: FlowEvents['nodesChange']) => {
   if(!dragActive ){
     // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
-    if(e != previousE){
-      previousE = e;
+
+   // getting the node as an object to compare against without other factors from a proxy effecting the comparison
+   // due to addnode returning two dimension nodechanges which match and nodechanged seems to trigger twice each time a change happens.
+    let eAsString = JSON.stringify(e);
+    if(eAsString != previousE){
+      previousE = eAsString;
+
       console.log('Node Changed: ', e)
       // add to history and increment history position
       history.push(e);
@@ -87,10 +104,6 @@ const onNodesChange = (e: FlowEvents['nodesChange']) => {
 
       let changes = [];
 
-      let newhistory = {
-        changes:'',
-
-      }
 
       e.forEach((element) => {
         console.log('With ID: ', element.id);
@@ -99,21 +112,27 @@ const onNodesChange = (e: FlowEvents['nodesChange']) => {
 
         // checks if element existed in the previous flow version
         const result = previousStoreState.find(({ id }) => id === element.id);
-        console.log(result);  
+        
+        let resultNode = '';
 
+        // if no result found then we know that it's a new node
         if(result === undefined){
           undoType = 'Delete';
           redoType = 'Add';
+          resultNode = element;
         }else{
-          undoType = 'update';
-          redoType = 'update';
+          undoType =  element.type;
+          redoType =  element.type;
+          // change result from proxy to  object to give previous node settings
+          resultNode = JSON.parse(JSON.stringify(result));
+          console.log(resultNode);
         }
 
-        //previousStoreState.getNode(element.id)
-        refinedHistory.push({  
+
+        changes.push({  
           undo: {
             type: undoType,
-            e: element,
+            e: resultNode,
           },
           redo: {
             type: redoType,
@@ -123,13 +142,21 @@ const onNodesChange = (e: FlowEvents['nodesChange']) => {
 
 
       })
+      refinedHistory.push({
+        changes:changes
+      })
+
+      
 
       // saves the state before the next change happens.
+      await nextTick();
       previousStoreState = store.elements;
+      
 
     }
   }
 }
+
 const onEdgeChange = (e: FlowEvents['edgesChange']) => {
   if(!dragActive ){
     // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
