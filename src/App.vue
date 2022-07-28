@@ -57,9 +57,9 @@ const onRedo = async () => {
     history[historyPosition-1].changes.forEach((element) => {
     console.log(element)
     console.log('Undo: ' + element.undo.type)
-    if(element.undo.type == "remove"){
-      element.undo.e.type = "remove";
-      console.log("node to delete:")
+    if(element.undo.type == "add"){
+      element.undo.e.type = "add";
+      console.log("node to add:")
       console.log(element.undo.e)
 
       applyNodeChanges([element.undo.e]);
@@ -68,7 +68,7 @@ const onRedo = async () => {
    
   });
   
-  historyPosition--;
+  historyPosition++;
   await nextTick();
   previousStoreState = store.elements;
   
