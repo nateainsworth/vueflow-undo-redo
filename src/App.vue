@@ -124,7 +124,7 @@ onNodesChange((e) => {
 
           // if no result found then we know that it's a new node
           if(result === undefined){
-            undoType = element.type;//'remove';
+            undoType = 'remove';
             redoType = 'add';
             //resultNode = element;
             //console.log('add node called: ' + element.id);
