@@ -8,7 +8,7 @@ import reStore from './undoredo.js';
 
 const store = useStore();
 
-const { onConnect, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange } = useVueFlow();
+const { onConnect,  nodes, addNodes, setNodes, setEdges, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange } = useVueFlow();
 
 onConnect((params) => addEdges([params]));
 
@@ -56,13 +56,13 @@ const onRedo = async () => {
 
     history[historyPosition-1].changes.forEach((element) => {
     console.log(element)
-    console.log('Undo: ' + element.undo.type)
-    if(element.undo.type == "add"){
-      element.undo.e.type = "add";
+    console.log('redo: ' + element.redo.type)
+    if(element.redo.type == "add"){
+      element.redo.e.type = "add";
       console.log("node to add:")
-      console.log(element.undo.e)
-
-      applyNodeChanges([element.undo.e]);
+      console.log(element.redo.addData[0].item)
+      addNodes([element.redo.addData[0].item]);
+      //applyNodeChanges([element.redo.e]);
       
     }
    
@@ -95,7 +95,7 @@ onSelectionDragStop((e) => {
   dragActive = false;
 });
 
-
+let addData = '';
 onNodesChange((e) => {
 
   if(!dragActive ){
@@ -108,6 +108,8 @@ onNodesChange((e) => {
       previousE = eAsString;
     
       let changes = [];
+
+      console.log(e);
 
       // ignores add as add also sends a dimentions event and since it's not currently within the vueflow the result check for exisiting ID will return undefined.
       if(e[0].type != "add"){
@@ -143,14 +145,16 @@ onNodesChange((e) => {
               type: undoType,
               elementType: "node",
               e: resultNode,
+              addData: addData,
             },
             redo: {
               type: redoType,
               elementType: "node",
               e: element,
+              addData: addData,
             },
           });
-
+          addData = null;
           console.log(changes[0].undo);
         })
         history.push({
@@ -164,6 +168,8 @@ onNodesChange((e) => {
         historyPosition++;
         console.log("History Position: " + historyPosition);
   
+      }else{
+        addData =  JSON.parse(JSON.stringify(e));
       }
 
     }
@@ -189,6 +195,7 @@ onEdgesChange((e) => {
     <div style="position: absolute; right: 10px; top: 10px; z-index: 4">
       <button @click="store.log">log store state</button>
       <button @click="onUndo">Undo</button>
+      <button @click="onRedo">Redo</button>
       <button @click="updateStore">Update Store</button>
     </div>
     <Controls />
