@@ -104,7 +104,7 @@ onNodesChange((e) => {
    // getting the node as an object to compare against without other factors from a proxy effecting the comparison
    // due to addnode returning two dimension nodechanges which match and nodechanged seems to trigger twice each time a change happens.
     let eAsString = JSON.stringify(e);
-    if(eAsString != previousE){
+    //if(eAsString != previousE){
       previousE = eAsString;
     
       let changes = [];
@@ -124,10 +124,10 @@ onNodesChange((e) => {
 
           // if no result found then we know that it's a new node
           if(result === undefined){
-            undoType = 'remove';
+            undoType = element.type;//'remove';
             redoType = 'add';
-            resultNode = element;
-            console.log('add node called: ' + element.id);
+            //resultNode = element;
+            //console.log('add node called: ' + element.id);
           }else{
             undoType =  element.type;
             redoType =  element.type;
@@ -167,7 +167,7 @@ onNodesChange((e) => {
       }
 
     }
-  }
+  //}
 
 });
 
