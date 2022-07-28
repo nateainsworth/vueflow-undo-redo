@@ -26,7 +26,7 @@ const updateStore = () => {
   previousStoreState = store.elements;
 }
 
-const onUndo = () => {
+const onUndo = async () => {
   //const reloadFlow = reStore.undoChange();
   //store.elements = reloadFlow;
 
@@ -39,19 +39,38 @@ const onUndo = () => {
       console.log("node to delete:")
       console.log(element.undo.e)
 
-      //applyNodeChanges("remove", element.undo.e);
       applyNodeChanges([element.undo.e]);
       
     }
    
   });
-  previousStoreState = store.elements;
+  
   historyPosition--;
+  await nextTick();
+  previousStoreState = store.elements;
   
 }
-const onRedo = () => {
+const onRedo = async () => {
   //const reloadFlow = reStore.undoChange();
   //store.elements = reloadFlow;
+
+    history[historyPosition-1].changes.forEach((element) => {
+    console.log(element)
+    console.log('Undo: ' + element.undo.type)
+    if(element.undo.type == "remove"){
+      element.undo.e.type = "remove";
+      console.log("node to delete:")
+      console.log(element.undo.e)
+
+      applyNodeChanges([element.undo.e]);
+      
+    }
+   
+  });
+  
+  historyPosition--;
+  await nextTick();
+  previousStoreState = store.elements;
   
 }
 
@@ -78,13 +97,7 @@ onSelectionDragStop((e) => {
 
 
 onNodesChange((e) => {
-   //const removalChanges = changes.filter(change => change.type === 'remove');
 
-   // do some logic
-
-   
-//})
-//const onNodesChange = async (e: FlowEvents['nodesChange']) => {
   if(!dragActive ){
     // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
 
