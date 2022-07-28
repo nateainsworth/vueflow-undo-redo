@@ -7,7 +7,10 @@ import reStore from './undoredo.js';
 
 
 
+
 const store = useStore();
+
+// old watch version
 
 //const reStore2 = reStore();
 /*
@@ -24,7 +27,12 @@ watch(() => store.elements.length,
   {deep: true}
 );
 */
-const { onConnect, addEdges, applyNodeChanges, applyEdgeChanges } = useVueFlow();
+
+const { onConnect, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange } = useVueFlow();
+
+
+
+
 
 onConnect((params) => addEdges([params]));
 
@@ -44,6 +52,7 @@ let top = 0;
 const updateStore = () => {
   previousStoreState = store.elements;
 }
+
 const onUndo = () => {
   //const reloadFlow = reStore.undoChange();
   //store.elements = reloadFlow;
@@ -57,16 +66,16 @@ const onUndo = () => {
       console.log("node to delete:")
       console.log(element.undo.e)
 
-      let changes = []
-      changes = {
+      let changes = [{
         type: "remove"
-      }
+      }]
       //applyNodeChanges("remove", element.undo.e);
       applyNodeChanges(changes, element.undo.e);
+      
     }
-    
    
   });
+  
   historyPosition--;
   
 }
@@ -76,19 +85,36 @@ const onRedo = () => {
   
 }
 
-const onNodeDragStop = (e: FlowEvents['nodeDragStop']) => {
+
+onNodeDragStop((e) => {
   console.log('drag stop');
   console.log(e);
   dragActive = false;
-}
+});
 
-const onNodeDragStart = (e: FlowEvents['nodeDragStart']) => {
+onNodeDragStart ((e) => {
   console.log('drag start');
   console.log(e);
   dragActive = true;
-}
+});
 
-const onNodesChange = async (e: FlowEvents['nodesChange']) => {
+onSelectionDragStart((e) => {
+  dragActive = true;
+});
+
+onSelectionDragStop((e) => {
+  dragActive = false;
+});
+
+
+onNodesChange((e) => {
+   //const removalChanges = changes.filter(change => change.type === 'remove');
+
+   // do some logic
+
+   
+//})
+//const onNodesChange = async (e: FlowEvents['nodesChange']) => {
   if(!dragActive ){
     // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
 
@@ -130,13 +156,16 @@ const onNodesChange = async (e: FlowEvents['nodesChange']) => {
             console.log(resultNode);
           }
 
+          // creates the redo and undo options for each element
           changes.push({  
             undo: {
               type: undoType,
+              elementType: "node",
               e: resultNode,
             },
             redo: {
               type: redoType,
+              elementType: "node",
               e: element,
             },
           });
@@ -162,10 +191,11 @@ const onNodesChange = async (e: FlowEvents['nodesChange']) => {
 
     }
   }
-}
+  //applyNodeChanges(e);
+});
 
-const onEdgeChange = (e: FlowEvents['edgesChange']) => {
-  if(!dragActive ){
+onEdgesChange((e) => {
+/*  if(!dragActive ){
     // for some reason node change is triggered twise not once so we have to check against the first to avoid duplicates.
     //if(e != previousE){
       previousE = e;
@@ -185,30 +215,25 @@ const onEdgeChange = (e: FlowEvents['edgesChange']) => {
       //previousStoreState.getNode(element.id)
     //}
   }
-}
+  */
+});
 
-const onSelectionDragStart = (e: FlowEvents['selectionDragStart']) => {
-  dragActive = true;
-}
-
-const onSelectionDragStop = (e: FlowEvents['selectionDragStop']) => {
-  dragActive = false;
-}
 // undo save the original value
 // redo save the new value
 
 </script>
 
+<!--   @node-drag-stop="onNodeDragStop"
+  @node-drag-start="onNodeDragStart"
+  @edges-change="onEdgeChange"
+  @selection-drag-start="onSelectionDragStart"
+  @selection-drag-stop="onSelectionDragStop"
+  -->
 <template>
   <VueFlow 
   v-model="store.elements" 
   :fit-view-on-init="true"
-  @node-drag-stop="onNodeDragStop"
-  @node-drag-start="onNodeDragStart"
-  @nodes-change="onNodesChange"
-  @edges-change="onEdgeChange"
-  @selection-drag-start="onSelectionDragStart"
-  @selection-drag-stop="onSelectionDragStop"
+
   >
     <div style="position: absolute; right: 10px; top: 10px; z-index: 4">
       <button @click="store.log">log store state</button>
