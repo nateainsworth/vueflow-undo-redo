@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@braks/vue-flow": "latest",
+    "@braks/vue-flow": "^0.4.31",
     "pinia": "^2.0.14",
     "vue": "^3.2.35"
   },
