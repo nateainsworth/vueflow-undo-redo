@@ -8,10 +8,11 @@ import reStore from './undoredo.js';
 
 const store = useStore();
 
-const { onConnect,  nodes, addNodes, setNodes, setEdges, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange } = useVueFlow();
+const { onConnect,  nodes, addNodes, setNodes, setEdges, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange, project, dimensions } = useVueFlow();
 
 onConnect((params) => addEdges([params]));
 
+project({ x: dimensions.value.width / 2, y: dimensions.value.height / 2})
 
 let previousE = [];
 let previousStoreState = store.elements;

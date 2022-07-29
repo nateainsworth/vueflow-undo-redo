@@ -3,7 +3,7 @@ import { useVueFlow } from '@braks/vue-flow'
 
 const flowKey = 'example-flow'
 
-const { nodes, addNodes, setNodes, setEdges, dimensions, setTransform, toObject } = useVueFlow()
+const { nodes, addNodes, setNodes, setEdges, dimensions, setTransform, toObject,project } = useVueFlow()
 
 const onAdd = () => {
   const id = nodes.value.length + 1
