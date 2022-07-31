@@ -10,6 +10,8 @@ const store = useStore();
 
 const { onConnect,  nodes, addNodes, setNodes, setEdges, addEdges, applyNodeChanges, applyEdgeChanges, onEdgesChange, onNodesChange,onNodeDragStop,onNodeDragStart ,onSelectionDragStart,  onSelectionDragStop, onEdgeChange, project, dimensions } = useVueFlow();
 
+//TODO: CONSIDER USING WATCH ON SELECTED NODES TO GET PREVIOUS VALUE. 
+
 onConnect((params) => addEdges([params]));
 
 project({ x: dimensions.value.width / 2, y: dimensions.value.height / 2})
